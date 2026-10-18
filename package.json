@@ -1,0 +1,13 @@
+{
+  "name": "d2survivors-hub",
+  "version": "1.0.0",
+  "description": "Multi-game arcade hub featuring D2 Survivors, hosted on Vercel",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve -l 3000 .",
+    "start": "npx serve -l 3000 ."
+  },
+  "keywords": ["game", "arcade", "d2-survivors", "roguelike", "vercel"],
+  "author": "falconilham",
+  "license": "MIT"
+}

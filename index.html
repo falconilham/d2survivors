@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arcade Vault — Web Games Hub</title>
+  <link rel="icon" href="./games/d2-survivors/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0a0b0e;
+      --bg-surface: #12141a;
+      --bg-card: #181b24;
+      --bg-card-hover: #202431;
+      --border-subtle: #272c3d;
+      --border-gold: #c5a059;
+      --gold-glow: rgba(197, 160, 89, 0.35);
+      --text-main: #f0f2f5;
+      --text-muted: #9ba3b5;
+      --accent-red: #d9383a;
+      --accent-gold: #e5b964;
+      --accent-cyan: #38bdf8;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% -20%, rgba(197, 160, 89, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 100% 50%, rgba(217, 56, 58, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 0% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(10, 11, 14, 0.85);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #c5a059, #8c6827);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--gold-glow);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #12141a;
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(to right, #f8e7b5, #c5a059);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-link:hover {
+      color: var(--accent-gold);
+    }
+
+    /* Hero Banner */
+    .hero {
+      max-width: 1240px;
+      margin: 36px auto 20px;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    .hero-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(24, 27, 36, 0.95), rgba(18, 20, 26, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px var(--gold-glow);
+    }
+
+    .hero-content {
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      z-index: 2;
+    }
+
+    .badge-featured {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      background: rgba(197, 160, 89, 0.18);
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .hero-title {
+      font-family: 'Cinzel', serif;
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1.15;
+      background: linear-gradient(180deg, #ffffff 30%, #e2c56b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 540px;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .tag {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #b7c0d3;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .tag.highlight {
+      border-color: rgba(197, 160, 89, 0.4);
+      color: #e5b964;
+      background: rgba(197, 160, 89, 0.08);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 28px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #e5b964, #b88628);
+      color: #0d0f14;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      box-shadow: 0 4px 18px rgba(197, 160, 89, 0.45);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(197, 160, 89, 0.6);
+      background: linear-gradient(135deg, #f2c97a, #c79532);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hero-art {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(197, 160, 89, 0.2) 0%, rgba(10, 11, 14, 0.95) 70%);
+      overflow: hidden;
+    }
+
+    .hero-art-img {
+      width: 80%;
+      max-width: 340px;
+      filter: drop-shadow(0 0 32px rgba(197, 160, 89, 0.4));
+      transform: scale(1.02);
+      transition: var(--transition);
+    }
+
+    .hero-card:hover .hero-art-img {
+      transform: scale(1.06);
+    }
+
+    /* Main Section & Filter Bar */
+    main {
+      max-width: 1240px;
+      margin: 20px auto 60px;
+      padding: 0 24px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-surface);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    /* Game Cards Grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 24px;
+    }
+
+    .game-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-gold);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), 0 0 18px var(--gold-glow);
+    }
+
+    .card-banner {
+      height: 170px;
+      position: relative;
+      background: linear-gradient(135deg, #1d212b, #12141a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .game-card:hover .card-banner img {
+      transform: scale(1.05);
+    }
+
+    .card-status {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-live {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      color: #4ade80;
+    }
+
+    .status-soon {
+      background: rgba(148, 163, 184, 0.2);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #94a3b8;
+    }
+
+    .card-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .card-play-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      padding: 30px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: auto;
+    }
+
+    footer a {
+      color: var(--accent-gold);
+      text-decoration: none;
+    }
+
+    @media (max-width: 860px) {
+      .hero-card {
+        grid-template-columns: 1fr;
+      }
+      .hero-art {
+        display: none;
+      }
+      .hero-content {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <a href="/" class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      </div>
+      <span class="brand-title">Arcade Vault</span>
+    </a>
+    <div class="nav-actions">
+      <a href="https://github.com/falconilham/d2survivors" target="_blank" rel="noopener noreferrer" class="nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Featured Hero Banner -->
+  <section class="hero">
+    <div class="hero-card">
+      <div class="hero-content">
+        <span class="badge-featured">⭐ Featured Game</span>
+        <h1 class="hero-title">D2 Survivors</h1>
+        <p class="hero-desc">
+          A Vampire Survivors-style reverse bullet-hell game built upon classic Diablo II artwork and sound. Battle waves of Fallen, skeletons, and the Prime Evils across Sanctuary.
+        </p>
+        <div class="hero-tags">
+          <span class="tag highlight">🎮 WebGL / HTML5</span>
+          <span class="tag highlight">👥 Party Mode Ready</span>
+          <span class="tag">Diablo II</span>
+          <span class="tag">Roguelite</span>
+          <span class="tag">Reverse Bullet Hell</span>
+        </div>
+        <div class="hero-actions">
+          <a href="/games/d2-survivors/play/" class="btn btn-gold">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Play Now
+          </a>
+          <a href="/games/d2-survivors/setup/" class="btn btn-outline">
+            Settings / MPQ Setup
+          </a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <img class="hero-art-img" src="./games/d2-survivors/icon-512.png" alt="D2 Survivors" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Games Catalog Section -->
+  <main>
+    <div class="section-header">
+      <h2 class="section-title">Games Catalog</h2>
+      <div class="filter-group">
+        <button class="filter-btn active">All Games (4)</button>
+        <button class="filter-btn">Survivors / Roguelike</button>
+        <button class="filter-btn">Action RPG</button>
+      </div>
+    </div>
+
+    <div class="games-grid">
+      <!-- Game Card 1: D2 Survivors -->
+      <a href="/games/d2-survivors/play/" class="game-card">
+        <div class="card-banner">
+          <img src="./games/d2-survivors/icon-512.png" alt="D2 Survivors" style="max-width:120px; max-height:120px; object-fit:contain;" />
+          <span class="card-status status-live">Live</span>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">D2 Survivors</h3>
+          <p class="card-desc">
+            Survive endless demonic hordes with Amazon, Barbarian, Sorceress, Paladin, Necromancer, Druid, and Assassin.
+          </p>
+          <div class="card-footer">
+            <div class="hero-tags">
+              <span class="tag highlight">WebGL</span>
+              <span class="tag">Roguelite</span>
+            </div>
+            <span class="card-play-label">Play &rarr;</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Game Card 2: 20 Minutes Till Dawn (Slot) -->
+      <div class="game-card" style="opacity: 0.85;">
+        <div class="card-banner" style="background: linear-gradient(135deg, #1b162b, #100d1a);">
+          <div style="font-size:48px;">🌑</div>
+          <span class="card-status status-soon">Coming Soon</span>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">20 Minutes Till Dawn</h3>
+          <p class="card-desc">
+            Survive the night against eldritch horrors in this fast-paced roguelike shooter. Choose your heroine and weapon synergies.
+          </p>
+          <div class="card-footer">
+            <div class="hero-tags">
+              <span class="tag">Action</span>
+              <span class="tag">Shooter</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-muted);">In Queue</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Card 3: Pixel Dungeon: Remastered (Slot) -->
+      <div class="game-card" style="opacity: 0.85;">
+        <div class="card-banner" style="background: linear-gradient(135deg, #14211a, #0b130f);">
+          <div style="font-size:48px;">🗡️</div>
+          <span class="card-status status-soon">Coming Soon</span>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Pixel Dungeon Web</h3>
+          <p class="card-desc">
+            A traditional rogue-like game with pixel-art graphics and simple interface. Explore the depths of Pixel Dungeon.
+          </p>
+          <div class="card-footer">
+            <div class="hero-tags">
+              <span class="tag">RPG</span>
+              <span class="tag">Turn-based</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-muted);">In Queue</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Card 4: Retro Survivors Arena (Slot) -->
+      <div class="game-card" style="opacity: 0.85;">
+        <div class="card-banner" style="background: linear-gradient(135deg, #261719, #170d0f);">
+          <div style="font-size:48px;">⚔️</div>
+          <span class="card-status status-soon">Coming Soon</span>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Survivors Arena</h3>
+          <p class="card-desc">
+            Classic top-down arena battle. Dodge bullet patterns, harvest soul gems, and evolve your weapons to survive the timer.
+          </p>
+          <div class="card-footer">
+            <div class="hero-tags">
+              <span class="tag">Arena</span>
+              <span class="tag">Arcade</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-muted);">In Queue</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      Arcade Vault &middot; Hosted on <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">Vercel</a> &middot;
+      Repository: <a href="https://github.com/falconilham/d2survivors" target="_blank" rel="noopener noreferrer">falconilham/d2survivors</a>
+    </p>
+    <p style="margin-top: 8px; font-size: 11px; opacity: 0.7;">
+      Fan-made gaming hub. Diablo II® is a registered trademark of Blizzard Entertainment, Inc.
+    </p>
+  </footer>
+
+</body>
+</html>

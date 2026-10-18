@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /next/
+Disallow: /download/
+Disallow: /api/
+
+Sitemap: https://d2survivors.lol/sitemap.xml

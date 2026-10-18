@@ -1,0 +1,123 @@
+<!doctype html>
+<!-- The desktop app's download page as plain HTML (HOR-718): what the setup and the plain page (ownFiles/plain.ts) link, readable with none of
+     Diablo II's files on the site. The game's own download page (GET THE DESKTOP APP) says the same in D2's art. The
+     installers sit beside it under fixed names (deploy/deploy.sh). English or Korean, as the game was last played. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>D2 Survivors: the desktop app</title>
+    <link rel="icon" href="/favicon-32.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px;
+        background: #000;
+        color: #d8d0c0;
+        font: 16px/1.5 Georgia, 'Palatino Linotype', serif;
+      }
+      main {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 24px;
+        background: #141414;
+        border: 2px solid #ac9c64;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-weight: normal;
+        letter-spacing: 0.06em;
+        color: #c7b377;
+        text-align: center;
+      }
+      h2 {
+        margin: 20px 0 4px;
+        font-size: 17px;
+        font-weight: normal;
+        color: #c7b377;
+      }
+      p {
+        margin: 0 0 8px;
+      }
+      .tagline {
+        text-align: center;
+        color: #a89d80;
+      }
+      .builds {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin: 20px 0;
+      }
+      .builds a,
+      .back {
+        display: inline-block;
+        min-height: 24px;
+        padding: 8px 16px;
+        color: inherit;
+        text-decoration: none;
+        background: #0d0b08;
+        border: 2px solid #5a4a2a;
+      }
+      .builds a:hover,
+      .back:hover {
+        border-color: #c7b377;
+      }
+      .note,
+      footer {
+        font-size: 13px;
+        color: #8a8478;
+      }
+      footer {
+        margin-top: 20px;
+        text-align: center;
+      }
+      [lang='ko'] .en,
+      [lang='en'] .ko {
+        display: none;
+      }
+    </style>
+    <script>
+      // The game's language (src/game/lang/index.ts): the one picked there, else the browser's.
+      try {
+        const kept = localStorage.getItem('d2s:lang');
+        const ko = kept ? kept === 'ko' : (navigator.languages || [navigator.language]).some((l) => /^ko\b/i.test(l));
+        if (ko) document.documentElement.lang = 'ko';
+      } catch {
+        // No storage: English.
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <h1>D2 SURVIVORS</h1>
+      <p class="tagline"><span class="en">The desktop app: in its own window, offline</span><span class="ko">데스크톱 앱: 전용 창에서, 오프라인으로</span></p>
+      <p class="en">D2 Survivors runs only on your own Diablo II files, out of respect for Blizzard's work. The desktop app plays from your own install: nothing is downloaded from Blizzard, and the app holds no Blizzard file. On first launch it finds your Diablo II and Lord of Destruction and extracts their art and sound once, in about a minute and a half. From then on it plays offline.</p>
+      <p class="ko">D2 Survivors는 블리자드의 작품을 존중하여 플레이어가 가진 디아블로 II 파일로만 실행됩니다. 데스크톱 앱은 설치된 게임 파일로 플레이합니다. 블리자드에서 아무것도 내려받지 않으며, 앱에는 블리자드 파일이 들어 있지 않습니다. 처음 실행할 때 디아블로 II와 파괴의 군주를 찾아 그래픽과 사운드를 한 번 추출하며, 약 1분 30초가 걸립니다. 그 뒤로는 오프라인으로 플레이합니다.</p>
+      <div class="builds">
+        <a href="/download/D2-Survivors-mac-arm64.dmg" download>Mac</a>
+        <a href="/download/D2-Survivors-Setup-win-x64.exe" download>Windows (<span class="en">beta</span><span class="ko">베타</span>)</a>
+      </div>
+      <h2><span class="en">Requirements</span><span class="ko">요구 사항</span></h2>
+      <p class="en">Diablo II and Lord of Destruction, patched to 1.14, or Diablo II: Resurrected, installed. macOS on Apple silicon, or Windows 10 or 11 (x64). About 1.5 GB of free disk space.</p>
+      <p class="ko">1.14 패치가 적용된 디아블로 II와 파괴의 군주, 또는 디아블로 II: 레저렉션 설치. Apple 실리콘 macOS 또는 Windows 10/11 (x64). 약 1.5 GB의 여유 디스크 공간.</p>
+      <h2><span class="en">On a Mac</span><span class="ko">Mac에서</span></h2>
+      <p class="en">Open the .dmg and drag D2 Survivors into Applications. It keeps itself up to date.</p>
+      <p class="ko">.dmg를 열고 D2 Survivors를 응용 프로그램 폴더로 끌어다 놓으십시오. 앱은 스스로 최신 상태를 유지합니다.</p>
+      <h2><span class="en">First launch on Windows (beta)</span><span class="ko">Windows에서 처음 실행 (베타)</span></h2>
+      <p class="en">Run the installer. It isn't signed, so SmartScreen warns about it: click More info, then Run anyway.</p>
+      <p class="ko">설치 프로그램을 실행하십시오. 서명되지 않아 SmartScreen이 경고합니다: 추가 정보를 누른 뒤 실행을 누르십시오.</p>
+      <h2><span class="en">Your saves</span><span class="ko">저장 데이터</span></h2>
+      <p class="en">On the website, SAVES saves your progress as a file or a code, with or without game files (on a phone too). In the app, SAVES imports it.</p>
+      <p class="ko">웹사이트의 저장 데이터에서 게임 파일이 없어도(휴대폰에서도) 진행 상황을 파일이나 코드로 내보낼 수 있습니다. 앱의 저장 데이터에서 가져올 수 있습니다.</p>
+      <p class="note"><span class="en">If it can't find Diablo II, point it at the folder that holds d2data.mpq.</span><span class="ko">디아블로 II를 찾지 못하면 d2data.mpq가 있는 폴더를 지정하십시오.</span></p>
+      <p style="text-align: center; margin-top: 20px"><a class="back" href="/"><span class="en">Back to the game</span><span class="ko">게임으로 돌아가기</span></a></p>
+      <footer>Unofficial fan project, not affiliated with Blizzard Entertainment. Diablo II® is a trademark of Blizzard Entertainment, Inc.</footer>
+    </main>
+  </body>
+</html>

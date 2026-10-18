@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover: the game runs under the notch and home bar; style.css keeps the HUD inside the safe area. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>D2 Survivors</title>
+    <!-- D2S: "D2S" in Exocet with the SURVIVORS banner's gold-to-ember fill, rendered by us (HOR-80). -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="../icon-512.png" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <!-- Added to a phone's home screen, it opens full screen without the browser's bars (HOR-86). -->
+    <link rel="manifest" href="../manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="D2 Survivors" />
+    <!-- Private fan build: keep it out of search engines. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- Umami (cookieless, self-hosted beside whatthemeta) on the live site only: not the dev server, not the desktop app (app://). -->
+    <script>
+      if (location.hostname === 'd2survivors.lol') {
+        const umami = document.createElement('script');
+        umami.defer = true;
+        umami.src = 'https://analytics.whatthemeta.io/script.js';
+        umami.dataset.websiteId = 'd93ae798-758a-4e4d-91eb-ccbd23cacc92';
+        document.head.append(umami);
+      }
+    </script>
+    <script type="module" crossorigin src="../assets/game-B1FUyKoO.js"></script>
+    <link rel="modulepreload" crossorigin href="../assets/CanvasPool-CTz6W2rm.js">
+    <link rel="modulepreload" crossorigin href="../assets/lang-CSKAj0fw.js">
+    <link rel="modulepreload" crossorigin href="../assets/Filter-xcuLdGR1.js">
+    <link rel="modulepreload" crossorigin href="../assets/canvasUtils-B5KrsTsU.js">
+    <link rel="modulepreload" crossorigin href="../assets/Cache-D0EC7riK.js">
+    <link rel="modulepreload" crossorigin href="../assets/defaultFilter.vert-Bl25M4I_.js">
+    <link rel="modulepreload" crossorigin href="../assets/GCManagedHash-25qXeh8D.js">
+    <link rel="modulepreload" crossorigin href="../assets/RenderTargetSystem-CRnmIqnZ.js">
+    <link rel="modulepreload" crossorigin href="../assets/getTextureBatchBindGroup-BOmbyaNZ.js">
+    <link rel="modulepreload" crossorigin href="../assets/GraphicsContext-BFAuFKTR.js">
+    <link rel="modulepreload" crossorigin href="../assets/CanvasRenderer-DUFxj1XG.js">
+    <link rel="modulepreload" crossorigin href="../assets/getTexelRangeRects-DvuDNdZD.js">
+    <link rel="modulepreload" crossorigin href="../assets/screens-DgnPdIMX.js">
+    <link rel="stylesheet" crossorigin href="../assets/screens-CUbjTt2P.css">
+    <link rel="stylesheet" crossorigin href="../assets/game-DEy7a9Gz.css">
+  </head>
+  <body class="no-run">
+    <div id="stage"></div>
+
+    <div id="hud">
+      <div id="build"><div id="skills"></div><div id="passives"></div></div>
+      <div id="clock">0:00</div>
+      <div id="counters"><span id="act"></span> · Level <span id="level">1</span> · <span id="kills">0</span> kills</div>
+      <div id="gold">0 gold</div>
+      <div id="boss" class="hidden">
+        <div id="boss-name"></div>
+        <div id="boss-bar"><div id="boss-fill"></div></div>
+        <div id="boss-mods"></div>
+      </div>
+      <!-- Banners, a chest's haul and overhead messages: one column, so they never overlap (src/game/notices.ts). -->
+      <div id="notices" aria-live="polite"></div>
+      <div id="life"><div id="life-fill"></div><span id="life-text"></span></div>
+      <div id="xp"><div id="xp-fill"></div></div>
+    </div>
+
+    <!-- On touch screens: what Esc, Tab and C do on a keyboard. -->
+    <div id="touch" class="touch-only">
+      <button id="touch-pause">Pause</button>
+      <button id="touch-automap" aria-pressed="false">Automap</button>
+      <button id="touch-character">Character</button>
+    </div>
+
+    <div id="level-up" class="overlay hidden">
+      <h2>Level Up</h2>
+      <p class="hint" id="level-up-hint"></p>
+      <!-- The build's skill and passive slots, filled and empty, and why the offer is attributes when it is (HOR-352). -->
+      <div id="level-up-slots" class="slot-bar"></div>
+      <p id="level-up-why" class="hidden"></p>
+      <div id="choices"></div>
+      <div class="actions">
+        <button id="reroll" data-pad-key="2"></button>
+        <button id="skip" data-pad-key="3"></button>
+        <button id="banish" data-pad-key="5"></button>
+      </div>
+    </div>
+
+    <div id="paused" class="overlay hidden">
+      <h2>Paused</h2>
+      <div class="actions pause-menu">
+        <button id="pause-options">Options</button>
+        <button id="pause-report">Report</button>
+        <button id="pause-exit">Save and exit game</button>
+        <button id="pause-resume">Return to game (Esc)</button>
+        <p id="pause-saved" class="hidden"></p>
+      </div>
+      <div class="pause-options hidden">
+        <label>Sound <input id="option-sfx" type="range" min="0" max="1" step="0.05" /></label>
+        <label>Music <input id="option-music" type="range" min="0" max="1" step="0.05" /></label>
+        <label><input id="option-mute" type="checkbox" /> Mute</label>
+        <label><input id="option-auto-stats" type="checkbox" /> Auto stats</label>
+        <div class="actions"><button id="options-back">Previous menu (Esc)</button></div>
+      </div>
+      <p class="legal">Unofficial fan project, not affiliated with Blizzard Entertainment. Diablo II® is a trademark of Blizzard Entertainment, Inc.</p>
+      <p id="build-label" class="legal"></p>
+    </div>
+
+    <div id="game-over" class="overlay hidden">
+      <h2 id="game-over-title" class="death"></h2>
+      <p id="game-over-text"></p>
+      <div class="actions">
+        <button id="restart">Play again (Enter)</button>
+        <button id="to-town" data-pad-key="2">Visit Charsi (T)</button>
+        <button id="to-menu">Main menu (Esc)</button>
+        <button id="game-over-report">Report</button>
+      </div>
+    </div>
+
+    <div id="town" class="overlay hidden">
+      <h2>Charsi's Wares</h2>
+      <p class="hint" id="town-gold"></p>
+      <div id="wares"></div>
+      <div class="actions">
+        <button id="town-inventory">Inventory (I)</button>
+        <button id="town-gamble" class="hidden">Gamble (G)</button>
+        <button id="town-sold">Buy back (B)</button>
+        <button id="town-again" class="hidden">New run (Enter)</button>
+        <button id="town-close">Start a new run (Enter)</button>
+      </div>
+      <p class="legal">Unofficial fan project, not affiliated with Blizzard Entertainment. Diablo II® is a trademark of Blizzard Entertainment, Inc.</p>
+    </div>
+
+    <div id="character" class="overlay hidden">
+      <div id="character-panels">
+        <div class="panel" id="char-stats"></div>
+        <!-- Charsi's wares as D2's store panel, in place of the stats beside the inventory (D2 interface only). -->
+        <div class="panel hidden" id="store-panel"></div>
+        <!-- Her gamble (HOR-173), a second store panel in the same place, for the hero she trades with. -->
+        <div class="panel hidden" id="gamble-panel"></div>
+        <!-- The stash (HOR-145), at Charsi's between runs: D2R's tabs (HOR-405) on D2's store panel in the same place. -->
+        <div class="panel hidden" id="stash-panel">
+          <div id="stash-tabs"></div>
+          <div id="stash"></div>
+        </div>
+        <div class="panel" id="inventory-panel">
+          <div id="paperdoll"></div>
+          <div id="inventory"></div>
+          <p class="hint">Click to pick up · Right-click to equip · Shift-click to sell · Esc to close</p>
+        </div>
+      </div>
+      <button id="char-close" class="touch-only">Close</button>
+      <!-- Portrait in a run, while an item is in hand: drops it at the hero's feet, after a second tap (HOR-214). -->
+      <button id="drop-held" class="touch-only">Drop</button>
+      <!-- Portrait at Charsi's, while an item is in hand: sells it to her in one tap, in Drop's place (HOR-393). -->
+      <button id="sell-held" class="touch-only">Sell</button>
+    </div>
+
+    <div id="tooltip" class="hidden"></div>
+
+  </body>
+</html>

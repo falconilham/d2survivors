@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/d2-survivors", "destination": "/games/d2-survivors/play/index.html" },
+    { "source": "/d2-survivors/(.*)", "destination": "/games/d2-survivors/$1" },
+    { "source": "/games/d2-survivors", "destination": "/games/d2-survivors/play/index.html" }
+  ]
+}
