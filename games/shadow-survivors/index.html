@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Shadow Survivors — Abyss of the Necromancer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #08090c; color: #f0f2f5; font-family: 'Inter', sans-serif;
+    }
+    #game-canvas { display: block; width: 100vw; height: 100vh; background: #0b0d13; }
+
+    /* HUD Overlay */
+    #hud {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 10; display: flex; flex-direction: column;
+      justify-content: space-between; padding: 16px;
+    }
+    .hud-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      width: 100%; max-width: 1200px; margin: 0 auto;
+    }
+    .hud-stats { display: flex; gap: 20px; align-items: center; }
+    .stat-badge {
+      background: rgba(18, 20, 26, 0.85); border: 1px solid #272c3d;
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      backdrop-filter: blur(8px); display: flex; align-items: center; gap: 6px;
+    }
+    .xp-container {
+      width: 100%; max-width: 1200px; margin: 0 auto; height: 12px;
+      background: rgba(20, 24, 33, 0.9); border: 1px solid #333d52;
+      border-radius: 6px; overflow: hidden; position: relative;
+    }
+    #xp-bar {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #818cf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6); transition: width 0.15s ease-out;
+    }
+    .hud-weapons {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .weapon-slot {
+      width: 38px; height: 38px; background: rgba(18, 20, 26, 0.85);
+      border: 1px solid #c5a059; border-radius: 6px; display: flex;
+      align-items: center; justify-content: center; font-size: 18px;
+    }
+    .hp-bar-wrap {
+      width: 160px; height: 14px; background: rgba(0,0,0,0.6);
+      border: 1px solid #dc2626; border-radius: 4px; overflow: hidden;
+    }
+    #hp-bar-fill {
+      height: 100%; width: 100%; background: linear-gradient(90deg, #ef4444, #dc2626);
+      transition: width 0.1s linear;
+    }
+
+    /* Screen Overlays (Modals) */
+    .overlay {
+      position: absolute; inset: 0; background: rgba(8, 9, 12, 0.88);
+      backdrop-filter: blur(10px); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 100;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      padding: 20px;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .panel-box {
+      background: #12141a; border: 2px solid #c5a059; border-radius: 16px;
+      max-width: 760px; width: 100%; padding: 32px; box-shadow: 0 16px 50px rgba(0,0,0,0.8), 0 0 30px rgba(197, 160, 89, 0.3);
+      text-align: center;
+    }
+    .panel-title {
+      font-family: 'Cinzel', serif; font-size: 32px; font-weight: 900;
+      color: #e5b964; letter-spacing: 2px; margin-bottom: 8px;
+    }
+    .panel-sub { color: #9ba3b5; font-size: 14px; margin-bottom: 24px; }
+
+    /* Character Selection */
+    .char-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .char-card {
+      background: #181b24; border: 1px solid #272c3d; border-radius: 12px;
+      padding: 18px 12px; cursor: pointer; transition: all 0.2s ease;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .char-card:hover, .char-card.selected {
+      border-color: #c5a059; transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(197, 160, 89, 0.35); background: #202431;
+    }
+    .char-icon { font-size: 36px; margin-bottom: 4px; }
+    .char-name { font-weight: 700; color: #fff; font-size: 15px; }
+    .char-weapon { font-size: 11px; color: #38bdf8; font-weight: 600; }
+
+    /* Companion Picker */
+    .companion-section {
+      background: rgba(0,0,0,0.3); border: 1px solid #272c3d;
+      border-radius: 10px; padding: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .companion-label { text-align: left; font-size: 13px; }
+    .companion-select {
+      background: #0d0f14; border: 1px solid #374151; color: #e5b964;
+      padding: 8px 14px; border-radius: 6px; font-weight: 600; outline: none;
+    }
+
+    /* Buttons */
+    .btn {
+      background: linear-gradient(135deg, #e5b964, #b88628); color: #0d0f14;
+      font-family: 'Cinzel', serif; font-weight: 800; font-size: 16px;
+      padding: 12px 36px; border-radius: 8px; border: none; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(197, 160, 89, 0.45); transition: all 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(197, 160, 89, 0.65); }
+
+    /* Upgrade Choices */
+    .upgrade-choices { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .upgrade-card {
+      background: #181b24; border: 1px solid #272c3d; border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 16px;
+      cursor: pointer; transition: all 0.2s ease; text-align: left;
+    }
+    .upgrade-card:hover {
+      border-color: #c5a059; background: #202431; transform: translateX(4px);
+    }
+    .upgrade-icon { font-size: 28px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border-radius: 8px; }
+    .upgrade-info { flex: 1; }
+    .upgrade-title { font-weight: 700; color: #e5b964; font-size: 15px; }
+    .upgrade-desc { font-size: 12px; color: #9ba3b5; margin-top: 2px; }
+
+    /* Touch Controls */
+    #touch-stick {
+      position: absolute; bottom: 40px; left: 40px; width: 110px; height: 110px;
+      background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 50%; display: none; pointer-events: none;
+    }
+    #touch-knob {
+      position: absolute; width: 46px; height: 46px; background: rgba(197, 160, 89, 0.5);
+      border-radius: 50%; top: 32px; left: 32px;
+    }
+    @media (pointer: coarse) { #touch-stick { display: block; } }
+  </style>
+</head>
+<body>
+
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div style="width: 100%;">
+      <div class="xp-container"><div id="xp-bar"></div></div>
+      <div class="hud-top" style="margin-top: 12px;">
+        <div class="hud-stats">
+          <div class="hp-bar-wrap"><div id="hp-bar-fill"></div></div>
+          <div class="stat-badge">⭐ Lv <span id="stat-level">1</span></div>
+          <div class="stat-badge">⏱️ <span id="stat-timer">00:00</span></div>
+          <div class="stat-badge">💀 <span id="stat-kills">0</span></div>
+        </div>
+        <div class="stat-badge" style="border-color:#c5a059; color:#e5b964;">
+          🪙 <span id="stat-gold">0</span>
+        </div>
+      </div>
+      <div class="hud-weapons" id="weapon-slots"></div>
+    </div>
+  </div>
+
+  <div id="touch-stick"><div id="touch-knob"></div></div>
+
+  <!-- Start & Character Select Screen -->
+  <div id="screen-start" class="overlay active">
+    <div class="panel-box">
+      <h1 class="panel-title">SHADOW SURVIVORS</h1>
+      <p class="panel-sub">Choose your Champion and summon an AI Companion to brave the Abyss</p>
+
+      <div class="char-grid" id="char-grid"></div>
+
+      <div class="companion-section">
+        <div class="companion-label">
+          <div style="font-weight: 700; color:#e5b964;">👥 AI Companion Party</div>
+          <div style="font-size:11px; color:#9ba3b5;">Your companion fights and casts spells beside you</div>
+        </div>
+        <select id="companion-select" class="companion-select">
+          <option value="none">No Companion (Solo)</option>
+          <option value="mage" selected>🧙‍♂️ Mage Companion (Arcane Missiles)</option>
+          <option value="warrior">⚔️ Warrior Companion (Blade Spin)</option>
+          <option value="ranger">🏹 Ranger Companion (Arrow Barrage)</option>
+          <option value="necromancer">💀 Necro Companion (Bone Spear)</option>
+        </select>
+      </div>
+
+      <button class="btn" id="btn-start-game">START CRUSADE</button>
+      <div style="margin-top: 14px; font-size: 12px; color: #64748b;">
+        Controls: <b>WASD</b> or <b>Arrow Keys</b> to Move &middot; Auto-Attacking &middot; Touch/Joystick Supported
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Up Screen -->
+  <div id="screen-levelup" class="overlay">
+    <div class="panel-box">
+      <h2 class="panel-title" style="color: #38bdf8;">LEVEL UP!</h2>
+      <p class="panel-sub">Choose a blessing to augment your power</p>
+      <div class="upgrade-choices" id="upgrade-choices"></div>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="screen-gameover" class="overlay">
+    <div class="panel-box">
+      <h2 class="panel-title" style="color: #ef4444;">YOU DIED</h2>
+      <p class="panel-sub" id="gameover-stats">You were overwhelmed by the darkness.</p>
+      <button class="btn" id="btn-restart">PLAY AGAIN</button>
+      <div style="margin-top:14px;"><a href="/" style="color:#e5b964; text-decoration:none; font-size:13px;">&larr; Back to Arcade Hub</a></div>
+    </div>
+  </div>
+
+  <script>
+    // --- AUDIO SYNTHESIZER (Pure Web Audio API) ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+      playHit() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.08);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+      }
+      playGem() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+      }
+      playSpell(freq = 440) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.5, this.ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.18);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.18);
+      }
+      playLevelUp() {
+        if (!this.ctx) return;
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.09);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime + i * 0.09);
+          gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + i * 0.09 + 0.2);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + i * 0.09);
+          osc.stop(this.ctx.currentTime + i * 0.09 + 0.2);
+        });
+      }
+    }
+    const audio = new SoundEngine();
+
+    // --- GAME ENGINE ---
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Character Definitions
+    const CHARACTERS = [
+      { id: 'mage', name: 'Mage Ignis', icon: '🧙‍♂️', color: '#38bdf8', startingWeapon: 'missile', hp: 90, speed: 200 },
+      { id: 'warrior', name: 'Warrior Valen', icon: '⚔️', color: '#f87171', startingWeapon: 'blades', hp: 140, speed: 180 },
+      { id: 'ranger', name: 'Ranger Lyra', icon: '🏹', color: '#4ade80', startingWeapon: 'arrows', hp: 100, speed: 220 },
+      { id: 'necromancer', name: 'Necromancer Moros', icon: '💀', color: '#c084fc', startingWeapon: 'bonespear', hp: 110, speed: 190 }
+    ];
+
+    // Upgrades Pool
+    const ALL_UPGRADES = [
+      { id: 'missile', title: 'Arcane Missile', icon: '✨', desc: 'Fires tracking energy orbs at the nearest foes.' },
+      { id: 'blades', title: 'Orbital Blades', icon: '⚔️', desc: 'Spinning blades form a protective lethal barrier.' },
+      { id: 'arrows', title: 'Piercing Arrows', icon: '🏹', desc: 'Rapid arrows that pierce through enemy ranks.' },
+      { id: 'bonespear', title: 'Bone Spear', icon: '🦴', desc: 'Hurls sharp bone spears dealing high piercing damage.' },
+      { id: 'lightning', title: 'Thunderstorm', icon: '⚡', desc: 'Random bolts of lightning strike enemies from above.' },
+      { id: 'firepool', title: 'Hellfire Pool', icon: '🔥', desc: 'Leaves burning pools that incinerate enemies standing on them.' },
+      { id: 'speed', title: 'Boots of Haste', icon: '👟', desc: '+15% Movement speed.' },
+      { id: 'magnet', title: 'Magnet Stone', icon: '🧲', desc: '+50% XP gem attraction range.' },
+      { id: 'vitality', title: 'Vitality Ring', icon: '❤️', desc: '+25 Max HP and small health regeneration.' }
+    ];
+
+    let gameState = 'MENU'; // MENU, PLAYING, LEVELUP, GAMEOVER
+    let selectedChar = CHARACTERS[0];
+    let selectedCompanion = 'mage';
+
+    // Game Objects
+    let player = null;
+    let companion = null;
+    let enemies = [];
+    let projectiles = [];
+    let gems = [];
+    let particles = [];
+    let floatingTexts = [];
+    let gameTime = 0;
+    let kills = 0;
+    let gold = 0;
+    let spawnTimer = 0;
+    let bossSpawned = false;
+
+    // Input
+    const keys = {};
+    window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+    window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+    // Touch Joystick
+    let touchStart = null, touchCurrent = null;
+    window.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      touchStart = { x: t.clientX, y: t.clientY };
+      touchCurrent = { ...touchStart };
+      document.getElementById('touch-stick').style.left = `${touchStart.x - 55}px`;
+      document.getElementById('touch-stick').style.top = `${touchStart.y - 55}px`;
+    });
+    window.addEventListener('touchmove', e => {
+      if (!touchStart) return;
+      const t = e.touches[0];
+      touchCurrent = { x: t.clientX, y: t.clientY };
+      const dx = touchCurrent.x - touchStart.x;
+      const dy = touchCurrent.y - touchStart.y;
+      const dist = Math.min(40, Math.hypot(dx, dy));
+      const angle = Math.atan2(dy, dx);
+      document.getElementById('touch-knob').style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+    });
+    window.addEventListener('touchend', () => {
+      touchStart = null; touchCurrent = null;
+      document.getElementById('touch-knob').style.transform = 'translate(0, 0)';
+    });
+
+    // Populate Char Grid
+    const charGrid = document.getElementById('char-grid');
+    CHARACTERS.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = `char-card ${i === 0 ? 'selected' : ''}`;
+      card.innerHTML = `
+        <div class="char-icon">${c.icon}</div>
+        <div class="char-name">${c.name}</div>
+        <div class="char-weapon">Weapon: ${c.startingWeapon}</div>
+      `;
+      card.onclick = () => {
+        document.querySelectorAll('.char-card').forEach(el => el.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedChar = c;
+      };
+      charGrid.appendChild(card);
+    });
+
+    document.getElementById('companion-select').onchange = (e) => {
+      selectedCompanion = e.target.value;
+    };
+
+    document.getElementById('btn-start-game').onclick = () => {
+      audio.init();
+      startGame();
+    };
+    document.getElementById('btn-restart').onclick = () => {
+      startGame();
+    };
+
+    function startGame() {
+      player = {
+        x: 0, y: 0,
+        radius: 16,
+        hp: selectedChar.hp,
+        maxHp: selectedChar.hp,
+        speed: selectedChar.speed,
+        level: 1,
+        xp: 0,
+        xpNext: 15,
+        magnet: 90,
+        weapons: { [selectedChar.startingWeapon]: 1 },
+        facingX: 1, facingY: 0
+      };
+
+      companion = null;
+      if (selectedCompanion !== 'none') {
+        const compDef = CHARACTERS.find(c => c.id === selectedCompanion) || CHARACTERS[0];
+        companion = {
+          id: compDef.id,
+          name: compDef.name,
+          icon: compDef.icon,
+          color: compDef.color,
+          x: player.x - 45, y: player.y - 25,
+          offsetX: -45, offsetY: -25,
+          weapon: compDef.startingWeapon,
+          cooldown: 0
+        };
+      }
+
+      enemies = [];
+      projectiles = [];
+      gems = [];
+      particles = [];
+      floatingTexts = [];
+      gameTime = 0;
+      kills = 0;
+      gold = 0;
+      spawnTimer = 0;
+      bossSpawned = false;
+
+      updateWeaponsHUD();
+      document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+      gameState = 'PLAYING';
+    }
+
+    function updateWeaponsHUD() {
+      const container = document.getElementById('weapon-slots');
+      container.innerHTML = '';
+      for (const w in player.weapons) {
+        const up = ALL_UPGRADES.find(u => u.id === w);
+        if (up) {
+          const div = document.createElement('div');
+          div.className = 'weapon-slot';
+          div.title = `${up.title} (Lv ${player.weapons[w]})`;
+          div.textContent = up.icon;
+          container.appendChild(div);
+        }
+      }
+    }
+
+    function addFloatingText(x, y, text, color = '#fff') {
+      floatingTexts.push({ x, y, text, color, life: 0.7, maxLife: 0.7 });
+    }
+
+    // --- GAME LOOP ---
+    let lastTime = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.08, (now - lastTime) / 1000);
+      lastTime = now;
+
+      if (gameState === 'PLAYING') {
+        update(dt);
+      }
+      render();
+
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    function update(dt) {
+      gameTime += dt;
+
+      // 1. Player Movement
+      let mx = 0, my = 0;
+      if (keys['w'] || keys['arrowup']) my -= 1;
+      if (keys['s'] || keys['arrowdown']) my += 1;
+      if (keys['a'] || keys['arrowleft']) mx -= 1;
+      if (keys['d'] || keys['arrowright']) mx += 1;
+
+      if (touchStart && touchCurrent) {
+        const dx = touchCurrent.x - touchStart.x;
+        const dy = touchCurrent.y - touchStart.y;
+        if (Math.hypot(dx, dy) > 10) {
+          mx = dx; my = dy;
+        }
+      }
+
+      const len = Math.hypot(mx, my);
+      if (len > 0) {
+        player.x += (mx / len) * player.speed * dt;
+        player.y += (my / len) * player.speed * dt;
+        player.facingX = mx / len;
+        player.facingY = my / len;
+      }
+
+      // 2. Companion Following
+      if (companion) {
+        const targetX = player.x + companion.offsetX;
+        const targetY = player.y + companion.offsetY;
+        const cdx = targetX - companion.x;
+        const cdy = targetY - companion.y;
+        const cdist = Math.hypot(cdx, cdy);
+        if (cdist > 350) {
+          companion.x = targetX; companion.y = targetY;
+        } else if (cdist > 4) {
+          companion.x += cdx * Math.min(1, dt * 6);
+          companion.y += cdy * Math.min(1, dt * 6);
+        }
+
+        // Companion Auto-Cast
+        companion.cooldown -= dt;
+        if (companion.cooldown <= 0 && enemies.length > 0) {
+          fireWeapon(companion.weapon, companion.x, companion.y, 1);
+          companion.cooldown = 1.6;
+        }
+      }
+
+      // 3. Player Weapon Timers
+      updateWeapons(dt);
+
+      // 4. Enemy Spawning
+      spawnTimer += dt;
+      const spawnInterval = Math.max(0.25, 1.4 - (gameTime / 120));
+      if (spawnTimer >= spawnInterval) {
+        spawnTimer = 0;
+        spawnEnemyWave();
+      }
+
+      // Spawn Boss at 2 minutes
+      if (gameTime >= 120 && !bossSpawned) {
+        bossSpawned = true;
+        spawnBoss();
+      }
+
+      // 5. Update Enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        const edx = player.x - e.x;
+        const edy = player.y - e.y;
+        const edist = Math.hypot(edx, edy) || 1;
+
+        e.x += (edx / edist) * e.speed * dt;
+        e.y += (edy / edist) * e.speed * dt;
+
+        // Player Collision Damage
+        if (edist < player.radius + e.radius) {
+          player.hp -= e.dps * dt;
+          audio.playHit();
+          if (player.hp <= 0) {
+            triggerGameOver();
+            return;
+          }
+        }
+      }
+
+      // 6. Update Projectiles
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.life -= dt;
+
+        if (p.type === 'blades') {
+          p.angle += p.speed * dt;
+          p.x = player.x + Math.cos(p.angle) * p.radius;
+          p.y = player.y + Math.sin(p.angle) * p.radius;
+        } else {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+        }
+
+        // Hit Check
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const e = enemies[j];
+          if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+            e.hp -= p.damage;
+            audio.playHit();
+            addFloatingText(e.x, e.y - 10, Math.round(p.damage), '#f87171');
+
+            if (p.pierce !== undefined) {
+              p.pierce--;
+              if (p.pierce <= 0) p.life = 0;
+            }
+
+            if (e.hp <= 0) {
+              kills++;
+              gold += Math.floor(Math.random() * 3) + 1;
+              gems.push({ x: e.x, y: e.y, xp: e.xpValue });
+              enemies.splice(j, 1);
+            }
+            break;
+          }
+        }
+
+        if (p.life <= 0) projectiles.splice(i, 1);
+      }
+
+      // 7. Update Gems (XP Magnet)
+      for (let i = gems.length - 1; i >= 0; i--) {
+        const g = gems[i];
+        const gdist = Math.hypot(player.x - g.x, player.y - g.y);
+        if (gdist < player.magnet) {
+          const spd = Math.max(300, 700 - gdist * 2);
+          g.x += ((player.x - g.x) / gdist) * spd * dt;
+          g.y += ((player.y - g.y) / gdist) * spd * dt;
+
+          if (gdist < player.radius + 10) {
+            player.xp += g.xp;
+            audio.playGem();
+            gems.splice(i, 1);
+
+            if (player.xp >= player.xpNext) {
+              levelUp();
+            }
+          }
+        }
+      }
+
+      // 8. Update Floating Text
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        ft.y -= 25 * dt;
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+      }
+
+      // Update HUD Elements
+      const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+      document.getElementById('hp-bar-fill').style.width = `${hpPercent}%`;
+      const xpPercent = Math.min(100, (player.xp / player.xpNext) * 100);
+      document.getElementById('xp-bar').style.width = `${xpPercent}%`;
+
+      document.getElementById('stat-level').textContent = player.level;
+      document.getElementById('stat-kills').textContent = kills;
+      document.getElementById('stat-gold').textContent = gold;
+
+      const mins = Math.floor(gameTime / 60).toString().padStart(2, '0');
+      const secs = Math.floor(gameTime % 60).toString().padStart(2, '0');
+      document.getElementById('stat-timer').textContent = `${mins}:${secs}`;
+    }
+
+    // --- WEAPON SYSTEM ---
+    const weaponCooldowns = {};
+    function updateWeapons(dt) {
+      for (const w in player.weapons) {
+        weaponCooldowns[w] = (weaponCooldowns[w] || 0) - dt;
+        if (weaponCooldowns[w] <= 0) {
+          const lv = player.weapons[w];
+          fireWeapon(w, player.x, player.y, lv);
+          weaponCooldowns[w] = getWeaponInterval(w, lv);
+        }
+      }
+    }
+
+    function getWeaponInterval(w, lv) {
+      switch (w) {
+        case 'missile': return Math.max(0.4, 1.2 - lv * 0.1);
+        case 'blades': return 3.0;
+        case 'arrows': return Math.max(0.3, 0.9 - lv * 0.08);
+        case 'bonespear': return 1.5;
+        case 'lightning': return Math.max(0.6, 1.8 - lv * 0.15);
+        case 'firepool': return 2.2;
+        default: return 2.0;
+      }
+    }
+
+    function fireWeapon(w, ox, oy, lv) {
+      if (!enemies.length) return;
+
+      if (w === 'missile') {
+        const target = getNearestEnemy(ox, oy);
+        if (target) {
+          const a = Math.atan2(target.y - oy, target.x - ox);
+          projectiles.push({
+            x: ox, y: oy, vx: Math.cos(a) * 380, vy: Math.sin(a) * 380,
+            radius: 6, damage: 18 + lv * 6, life: 2.5, color: '#38bdf8'
+          });
+          audio.playSpell(520);
+        }
+      } else if (w === 'arrows') {
+        const count = 1 + lv;
+        const target = getNearestEnemy(ox, oy);
+        const baseAngle = target ? Math.atan2(target.y - oy, target.x - ox) : 0;
+        for (let i = 0; i < count; i++) {
+          const spread = (i - (count - 1) / 2) * 0.18;
+          const a = baseAngle + spread;
+          projectiles.push({
+            x: ox, y: oy, vx: Math.cos(a) * 440, vy: Math.sin(a) * 440,
+            radius: 4, damage: 14 + lv * 4, pierce: 2, life: 2.0, color: '#4ade80'
+          });
+        }
+        audio.playSpell(680);
+      } else if (w === 'bonespear') {
+        const target = getNearestEnemy(ox, oy);
+        if (target) {
+          const a = Math.atan2(target.y - oy, target.x - ox);
+          projectiles.push({
+            x: ox, y: oy, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480,
+            radius: 7, damage: 32 + lv * 12, pierce: 4, life: 2.2, color: '#c084fc'
+          });
+          audio.playSpell(360);
+        }
+      } else if (w === 'blades') {
+        projectiles = projectiles.filter(p => p.type !== 'blades');
+        const count = 2 + lv;
+        for (let i = 0; i < count; i++) {
+          projectiles.push({
+            type: 'blades', radius: 10,
+            angle: (i / count) * Math.PI * 2,
+            radiusDist: 75 + lv * 5, speed: 4.2,
+            damage: 16 + lv * 5, life: 3.5, color: '#f87171'
+          });
+        }
+      } else if (w === 'lightning') {
+        const e = enemies[Math.floor(Math.random() * enemies.length)];
+        if (e) {
+          e.hp -= (40 + lv * 15);
+          audio.playSpell(220);
+          addFloatingText(e.x, e.y - 12, 40 + lv * 15, '#facc15');
+          particles.push({ x: e.x, y: e.y, radius: 24, life: 0.25, color: '#facc15' });
+        }
+      }
+    }
+
+    function getNearestEnemy(ox, oy) {
+      let nearest = null, minDist = Infinity;
+      for (const e of enemies) {
+        const d = Math.hypot(e.x - ox, e.y - oy);
+        if (d < minDist) { minDist = d; nearest = e; }
+      }
+      return nearest;
+    }
+
+    // --- ENEMY SPAWNING ---
+    function spawnEnemyWave() {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.max(canvas.width, canvas.height) / 2 + 50;
+      const x = player.x + Math.cos(angle) * dist;
+      const y = player.y + Math.sin(angle) * dist;
+
+      // Enemy types based on elapsed time
+      if (gameTime < 40) {
+        enemies.push({ x, y, radius: 12, hp: 20, speed: 105, dps: 12, xpValue: 1, color: '#9ca3af', icon: '🧟' });
+      } else if (gameTime < 90) {
+        enemies.push({ x, y, radius: 10, hp: 35, speed: 145, dps: 16, xpValue: 2, color: '#f87171', icon: '🦇' });
+      } else {
+        enemies.push({ x, y, radius: 14, hp: 75, speed: 95, dps: 22, xpValue: 4, color: '#a855f7', icon: '💀' });
+      }
+    }
+
+    function spawnBoss() {
+      const angle = Math.random() * Math.PI * 2;
+      const x = player.x + Math.cos(angle) * 500;
+      const y = player.y + Math.sin(angle) * 500;
+      enemies.push({
+        x, y, radius: 30, hp: 1200, maxHp: 1200, speed: 80,
+        dps: 40, xpValue: 50, color: '#dc2626', icon: '👹', isBoss: true
+      });
+      addFloatingText(player.x, player.y - 40, '⚠️ THE BUTCHER RISES!', '#ef4444');
+    }
+
+    // --- LEVEL UP ---
+    function levelUp() {
+      player.level++;
+      player.xp -= player.xpNext;
+      player.xpNext = Math.round(player.xpNext * 1.45);
+      audio.playLevelUp();
+
+      gameState = 'LEVELUP';
+      const container = document.getElementById('upgrade-choices');
+      container.innerHTML = '';
+
+      // Random 3 upgrades
+      const shuffled = [...ALL_UPGRADES].sort(() => 0.5 - Math.random()).slice(0, 3);
+      shuffled.forEach(up => {
+        const div = document.createElement('div');
+        div.className = 'upgrade-card';
+        const curLv = player.weapons[up.id] || 0;
+        div.innerHTML = `
+          <div class="upgrade-icon">${up.icon}</div>
+          <div class="upgrade-info">
+            <div class="upgrade-title">${up.title} ${curLv ? `(Level ${curLv + 1})` : '(New!)'}</div>
+            <div class="upgrade-desc">${up.desc}</div>
+          </div>
+        `;
+        div.onclick = () => {
+          applyUpgrade(up.id);
+          document.getElementById('screen-levelup').classList.remove('active');
+          gameState = 'PLAYING';
+        };
+        container.appendChild(div);
+      });
+
+      document.getElementById('screen-levelup').classList.add('active');
+    }
+
+    function applyUpgrade(id) {
+      if (id === 'speed') player.speed += 25;
+      else if (id === 'magnet') player.magnet += 50;
+      else if (id === 'vitality') { player.maxHp += 25; player.hp += 25; }
+      else {
+        player.weapons[id] = (player.weapons[id] || 0) + 1;
+      }
+      updateWeaponsHUD();
+    }
+
+    function triggerGameOver() {
+      gameState = 'GAMEOVER';
+      document.getElementById('gameover-stats').innerHTML = `
+        Survived for <b>${document.getElementById('stat-timer').textContent}</b><br>
+        Slain <b>${kills}</b> creatures &middot; Collected <b>${gold}</b> gold &middot; Reached Level <b>${player.level}</b>
+      `;
+      document.getElementById('screen-gameover').classList.add('active');
+    }
+
+    // --- RENDER ---
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!player) return;
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // 1. Draw Grid Floor
+      const tileSize = 80;
+      const offsetX = -player.x % tileSize;
+      const offsetY = -player.y % tileSize;
+
+      ctx.strokeStyle = '#151923';
+      ctx.lineWidth = 1;
+      for (let x = offsetX - tileSize; x < canvas.width + tileSize; x += tileSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = offsetY - tileSize; y < canvas.height + tileSize; y += tileSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.translate(cx - player.x, cy - player.y);
+
+      // 2. Draw Gems
+      for (const g of gems) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(g.x, g.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // 3. Draw Projectiles
+      for (const p of projectiles) {
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // 4. Draw Enemies
+      for (const e of enemies) {
+        ctx.font = `${e.radius * 1.8}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(e.icon, e.x, e.y);
+
+        if (e.isBoss) {
+          // Boss Health Bar
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(e.x - 30, e.y - e.radius - 12, 60, 6);
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(e.x - 30, e.y - e.radius - 12, 60 * (e.hp / e.maxHp), 6);
+        }
+      }
+
+      // 5. Draw Companion
+      if (companion) {
+        // Glowing Aura Base
+        ctx.beginPath();
+        ctx.arc(companion.x, companion.y + 10, 16, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+        ctx.strokeStyle = companion.color; ctx.lineWidth = 2;
+        ctx.shadowColor = companion.color; ctx.shadowBlur = 10;
+        ctx.stroke(); ctx.shadowBlur = 0;
+
+        ctx.font = '24px serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(companion.icon, companion.x, companion.y);
+
+        // Name Tag
+        ctx.font = 'bold 10px Inter, sans-serif';
+        ctx.fillStyle = companion.color;
+        ctx.fillText(`${companion.name} (Ally)`, companion.x, companion.y - 18);
+      }
+
+      // 6. Draw Player
+      ctx.beginPath();
+      ctx.arc(player.x, player.y + 10, 18, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fill();
+      ctx.strokeStyle = selectedChar.color; ctx.lineWidth = 2.5;
+      ctx.shadowColor = selectedChar.color; ctx.shadowBlur = 12;
+      ctx.stroke(); ctx.shadowBlur = 0;
+
+      ctx.font = '28px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(selectedChar.icon, player.x, player.y);
+
+      // Magnet Circle Indicator
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.magnet, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+      ctx.lineWidth = 1; ctx.stroke();
+
+      // 7. Draw Floating Numbers
+      for (const ft of floatingTexts) {
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillStyle = ft.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
+
+      ctx.restore();
+    }
+  </script>
+</body>
+</html>

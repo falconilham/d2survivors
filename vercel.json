@@ -2,6 +2,9 @@
   "version": 2,
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/shadow-survivors", "destination": "/games/shadow-survivors/index.html" },
+    { "source": "/shadow-survivors/(.*)", "destination": "/games/shadow-survivors/$1" },
+    { "source": "/games/shadow-survivors", "destination": "/games/shadow-survivors/index.html" },
     { "source": "/d2-survivors", "destination": "/games/d2-survivors/play/index.html" },
     { "source": "/d2-survivors/(.*)", "destination": "/games/d2-survivors/$1" },
     { "source": "/games/d2-survivors", "destination": "/games/d2-survivors/play/index.html" }
